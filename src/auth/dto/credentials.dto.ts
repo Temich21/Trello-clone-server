@@ -4,16 +4,16 @@ import {
   Matches,
 } from 'class-validator';
 
-const passwordRegEx =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{4,20}$/
+// const passwordRegEx =
+//   /^(?=.*[a-z])(?=.*[A-Z])(?=.*d)(?=.*[@$!%*?&])[A-Za-zd@$!%*?&]{4,20}$/
 
-export class LoginUserDto {
+export class CredentialsDto {
   @IsNotEmpty()
   @IsEmail(null, { message: 'Please provide valid Email.' })
   email: string
 
   @IsNotEmpty()
-  @Matches(passwordRegEx, {
+  @Matches(null, {
     message: `Password must contain Minimum 8 and maximum 20 characters, 
     at least one uppercase letter, 
     one lowercase letter, 

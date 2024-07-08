@@ -1,8 +1,8 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Next, Post, Req, Res, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Next, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response, NextFunction } from 'express';
 import { CreateUserDto } from './dto/create-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
+import { CredentialsDto } from './dto/credentials.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -33,7 +33,7 @@ export class AuthController {
     @Post('login')
     async login(
         @Req() req: Request,
-        @Body() loginUserDto: LoginUserDto,
+        @Body() loginUserDto: CredentialsDto,
         @Res({ passthrough: true }) res: Response,
         @Next() next: NextFunction
     ) {
@@ -45,7 +45,7 @@ export class AuthController {
         } catch (e) {
             return next(new HttpException({
                 status: HttpStatus.FORBIDDEN,
-                error: 'Error during registration',
+                error: 'Error during login',
             }, HttpStatus.FORBIDDEN, {
                 cause: e
             }))
@@ -88,7 +88,7 @@ export class AuthController {
         } catch (e) {
             return next(new HttpException({
                 status: HttpStatus.FORBIDDEN,
-                error: 'Error during logout',
+                error: 'Error during refresh',
             }, HttpStatus.FORBIDDEN, {
                 cause: e
             }))

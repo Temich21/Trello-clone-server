@@ -1,10 +1,11 @@
 import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Token } from 'src/auth/token/token.entity';
+import { Board } from 'src/board/entities/board.entity';
 
 @Entity()
 export class User {
     @PrimaryGeneratedColumn('uuid')
-    id: string;
+    id: string
 
     @Column({ type: 'varchar', length: 40 })
     name: string
@@ -17,6 +18,9 @@ export class User {
 
     @OneToMany(() => Token, token => token.user)
     tokens: Token[]
+
+    @OneToMany(() => Board, board => board.user)
+    boards: Board[]
 
     constructor(name: string, email: string, hashPassword: string) {
         this.name = name

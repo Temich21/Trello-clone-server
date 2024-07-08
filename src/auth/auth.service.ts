@@ -5,7 +5,7 @@ import { TokenService } from 'src/auth/token/token.service';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
+import { CredentialsDto } from './dto/credentials.dto';
 
 interface UserResponse {
     id: string
@@ -42,7 +42,7 @@ export class AuthService {
         return { ...tokens, user: { id: user.id, name: user.name, email: user.email } }
     }
 
-    async login({ email, password }: LoginUserDto, deviceIP: string): Promise<AuthUser> {
+    async login({ email, password }: CredentialsDto, deviceIP: string): Promise<AuthUser> {
         const user = await this.userRepository.findOne({ where: { email } })
         if (!user) {
             throw new Error("User with this email doesn't exist")
