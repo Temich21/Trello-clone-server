@@ -16,8 +16,7 @@ export class AuthController {
         @Next() next: NextFunction
     ) {
         try {
-            const deviceIP = req.ip
-            const userData = await this.authService.singup(createUserDto, deviceIP)
+            const userData = await this.authService.singup(createUserDto)
             res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
             return res.json(userData)
         } catch (e) {
@@ -38,8 +37,7 @@ export class AuthController {
         @Next() next: NextFunction
     ) {
         try {
-            const deviceIP = req.ip
-            const userData = await this.authService.login(loginUserDto, deviceIP)
+            const userData = await this.authService.login(loginUserDto)
             res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
             return res.json(userData)
         } catch (e) {
@@ -59,9 +57,6 @@ export class AuthController {
         @Next() next: NextFunction
     ) {
         try {
-            const { refreshToken } = req.cookies
-            const deviceIP = req.ip
-            await this.authService.logout(refreshToken, deviceIP)
             res.clearCookie('refreshToken')
         } catch (e) {
             return next(new HttpException({
@@ -81,8 +76,7 @@ export class AuthController {
     ) {
         try {
             const { refreshToken } = req.cookies
-            const deviceIP = req.ip
-            const userData = await this.authService.refresh(refreshToken, deviceIP)
+            const userData = await this.authService.refresh(refreshToken)
             res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
             return res.json(userData)
         } catch (e) {

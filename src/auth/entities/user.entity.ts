@@ -1,5 +1,4 @@
 import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { Token } from 'src/auth/token/token.entity';
 import { Board } from 'src/board/entities/board.entity';
 
 @Entity()
@@ -15,9 +14,6 @@ export class User {
 
     @Column({ type: 'text' })
     password: string
-
-    @OneToMany(() => Token, token => token.user)
-    tokens: Token[]
 
     @OneToMany(() => Board, board => board.user)
     boards: Board[]

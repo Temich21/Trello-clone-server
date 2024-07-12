@@ -27,7 +27,7 @@ export class AuthService {
         private userRepository: Repository<User>,
     ) { }
 
-    async singup({ name, email, password }: CreateUserDto, deviceIP: string): Promise<AuthUser> {
+    async singup({ name, email, password }: CreateUserDto): Promise<AuthUser> {
         const candidate = await this.userRepository.findOne({ where: { email } })
         if (candidate) {
             throw new Error(`User with this email ${email} already exist`)
@@ -37,12 +37,11 @@ export class AuthService {
         const user = await this.userRepository.save(new User(name, email, hashPassword))
 
         const tokens = this.tokenService.generateTokens({ ...user })
-        await this.tokenService.saveToken(user.id, tokens.refreshToken, deviceIP)
 
         return { ...tokens, user: { id: user.id, name: user.name, email: user.email } }
     }
 
-    async login({ email, password }: CredentialsDto, deviceIP: string): Promise<AuthUser> {
+    async login({ email, password }: CredentialsDto): Promise<AuthUser> {
         const user = await this.userRepository.findOne({ where: { email } })
         if (!user) {
             throw new Error("User with this email doesn't exist")
@@ -54,24 +53,18 @@ export class AuthService {
         }
 
         const tokens = this.tokenService.generateTokens({ ...user })
-        await this.tokenService.saveToken(user.id, tokens.refreshToken, deviceIP)
 
         return { ...tokens, user: { id: user.id, name: user.name, email: user.email } }
     }
 
-    async logout(refreshToken: string, deviceIP: string) {
-        await this.tokenService.removeToken(refreshToken, deviceIP)
-    }
-
-    async refresh(refreshToken: string, deviceIP: string): Promise<AuthUser> {
+    async refresh(refreshToken: string): Promise<AuthUser> {
         if (!refreshToken) {
             //throw error - unauthorized person
         }
 
         const userData = this.tokenService.validateAccessToken(refreshToken)
-        const tokenFromDb = this.tokenService.findToken(refreshToken, deviceIP)
 
-        if (!userData || !tokenFromDb) {
+        if (!userData) {
             //throw error - unauthorized person
         }
 

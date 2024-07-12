@@ -1,14 +1,18 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Column as ColumnORM, Entity, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
 import { User } from 'src/auth/entities/user.entity';
+import { Column } from 'src/column/entities/column.entity';
 
 @Entity()
 export class Board {
     @PrimaryGeneratedColumn('uuid')
     id: string
 
-    @Column({ type: 'varchar', length: 40 })
+    @ColumnORM({ type: 'varchar', length: 40 })
     name: string
 
     @ManyToOne(() => User, user => user.boards, { onDelete: 'CASCADE' })
     user: User
+
+    @OneToMany(() => Column, column => column.board)
+    columns: Column[]
 }
