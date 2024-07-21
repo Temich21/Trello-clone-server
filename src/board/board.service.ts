@@ -10,7 +10,7 @@ import { ColumnService } from 'src/column/column.service'
 export interface BoardResponse {
     id: string,
     name: string
-    columns?: Column[]
+    columns?: Column[],
 }
 
 @Injectable()
