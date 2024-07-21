@@ -57,7 +57,7 @@ export class AuthService {
         return { ...tokens, user: { id: user.id, name: user.name, email: user.email } }
     }
 
-    async refresh(refreshToken: string): Promise<AuthUser> {
+    async refresh(refreshToken: string) {
         if (!refreshToken) {
             //throw error - unauthorized person
         }

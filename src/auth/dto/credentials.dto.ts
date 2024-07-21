@@ -9,16 +9,16 @@ import {
 
 export class CredentialsDto {
   @IsNotEmpty()
-  @IsEmail(null, { message: 'Please provide valid Email.' })
+  @IsEmail(undefined, { message: 'Please provide valid Email.' })
   email: string
 
   @IsNotEmpty()
-  @Matches(null, {
-    message: `Password must contain Minimum 8 and maximum 20 characters, 
-    at least one uppercase letter, 
-    one lowercase letter, 
-    one number and 
-    one special character`,
-  })
+  // @Matches(, {
+  //   message: `Password must contain Minimum 8 and maximum 20 characters, 
+  //   at least one uppercase letter, 
+  //   one lowercase letter, 
+  //   one number and 
+  //   one special character`,
+  // })
   password: string
 }

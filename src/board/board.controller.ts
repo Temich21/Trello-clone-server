@@ -49,9 +49,8 @@ export class BoardController {
   async findOne(
     @Param('id') id: string,
   ) {
-    const board = await this.boardService.findOne(id) // if board is null???
-    console.log(board);
-    return 
+    const board = await this.boardService.findOne(id)
+    return board
   }
 
   @Patch(':id')
