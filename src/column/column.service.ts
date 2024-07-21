@@ -21,11 +21,12 @@ export class ColumnService {
         private cardService: CardService,
     ) { }
 
-    async create(CreateColumnDto: CreateColumnDto): Promise<ColumnResponse> {
+    async create(createColumnDto: CreateColumnDto): Promise<ColumnResponse> {
         const newColumn = this.columnRepository.create({
-            board: { id: CreateColumnDto.boardId },
+            board: { id: createColumnDto.boardId },
             name: CreateColumnDto.name
         })
+        // Add response dto
         const column = await this.columnRepository.save(newColumn)
         return { id: column.id, name: column.name }
     }
@@ -36,17 +37,18 @@ export class ColumnService {
             relations: ['board'],
         })
 
-        columns.forEach(async (column) => {
-            const cards = await this.cardService.findAll(column.id)
-            column.cards = cards
-            return column
-        })
+        const columnsWithCards = await Promise.all(
+            columns.map(async (column) => {
+                const cards = await this.cardService.findAll(column.id)
+                return { ...column, cards }
+            })
+        )
 
-        return columns
+        return columnsWithCards
     }
 
-    async update(id: string, updateColumnDto: UpdateColumnDto) {
-        return await this.columnRepository.update(id, { ...updateColumnDto })
+    async update(updateColumnDto: UpdateColumnDto) {
+        return await this.columnRepository.update(updateColumnDto.id, { ...updateColumnDto })
     }
 
     async remove(id: string) {

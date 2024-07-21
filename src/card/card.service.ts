@@ -29,6 +29,7 @@ export class CardService {
   async findAll(columnId: string): Promise<Card[]> {
     return await this.cardRepository.find({
       where: { column: { id: columnId } },
+      // order: { rank: "ASC"},
       relations: ['column'],
     })
   }

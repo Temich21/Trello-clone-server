@@ -11,4 +11,7 @@ export class Card {
 
     @ManyToOne(() => Column, column => column.cards, { onDelete: 'CASCADE' })
     column: Column
+
+    // @ColumnORM({ type: 'bigint'})
+    // rank: number
 }

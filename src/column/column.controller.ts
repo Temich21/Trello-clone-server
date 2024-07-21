@@ -14,13 +14,12 @@ export class ColumnController {
     return await this.columnService.create(createColumndDto)
   }
 
-  @Patch(':id')
+  @Patch()
   async update(
-    @Param('id') id: string,
     @Body() updateColumnDto: UpdateColumnDto
   ) {
-    await this.columnService.update(id, updateColumnDto)
-    return { id, ...updateColumnDto }
+    await this.columnService.update(updateColumnDto)
+    return { ...updateColumnDto }
   }
 
   @Delete(':id')

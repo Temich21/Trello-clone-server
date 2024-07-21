@@ -41,8 +41,10 @@ export class BoardService {
         const board = await this.boardRepository.findOne({
             where: { id }
         })
-        board.columns = await this.columnService.findAll(id)
-        return board
+
+        // board!!.columns = await this.columnService.findAll(id)
+        
+        return board!!
     }
 
     async update(id: string, updateBoardDto: UpdateBoardDto) {

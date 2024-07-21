@@ -17,12 +17,12 @@ export class TokenService {
     generateTokens(payload: Partial<User>): AuthTokens {
         const accessToken = this.jwtService.sign(payload, {
             secret: process.env.JWT_ACCESS_SECRET,
-            expiresIn: '30m'
+            expiresIn: process.env.JWT_ACCESS_TOKEN_TIME
         } as JwtSignOptions)
 
         const refreshToken = this.jwtService.sign(payload, {
             secret: process.env.JWT_REFRESH_SECRET,
-            expiresIn: '30d'
+            expiresIn: process.env.JWT_REFRESH_TOKEN_TIME
         } as JwtSignOptions)
 
         return { accessToken, refreshToken }
