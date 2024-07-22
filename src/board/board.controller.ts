@@ -49,17 +49,15 @@ export class BoardController {
   async findOne(
     @Param('id') id: string,
   ) {
-    const board = await this.boardService.findOne(id)
-    return board
+    return await this.boardService.findOne(id)
   }
 
-  @Patch(':id')
+  @Patch()
   async update(
-    @Param('id') id: string,
     @Body() updateBoardDto: UpdateBoardDto
   ) {
-    await this.boardService.update(id, updateBoardDto)
-    return { id, ...updateBoardDto }
+    await this.boardService.update(updateBoardDto)
+    return { ...updateBoardDto }
   }
 
   @Delete(':id')

@@ -1,14 +1,14 @@
+import { CreateCardDto } from './create-card.dto';
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateColumnDto } from './create-column.dto';
 import {
     IsNotEmpty,
     IsString,
 } from 'class-validator';
 
-export class ResponseColumnDto extends PartialType(CreateColumnDto) {
+export class ResponseCardDto extends PartialType(CreateCardDto) {
     @IsString()
     @IsNotEmpty()
-    id: string
+    id: string;
 
     constructor(id: string, name: string) {
         super()

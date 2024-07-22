@@ -3,31 +3,25 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
+import { ResponseBoardDto } from './dto/response-board.dto';
 import { Board } from './entities/board.entity';
-import { Column } from 'src/column/entities/column.entity';
-import { ColumnService } from 'src/column/column.service'
-
-export interface BoardResponse {
-    id: string,
-    name: string
-    columns?: Column[],
-}
 
 @Injectable()
 export class BoardService {
     constructor(
         @InjectRepository(Board)
         private boardRepository: Repository<Board>,
-        private columnService: ColumnService,
     ) { }
 
-    async create(createBoardDto: CreateBoardDto): Promise<BoardResponse> {
+    async create(createBoardDto: CreateBoardDto): Promise<ResponseBoardDto> {
         const newBoard = this.boardRepository.create({
             user: { id: createBoardDto.userId },
             name: createBoardDto.name
         })
+        
         const board = await this.boardRepository.save(newBoard)
-        return { id: board.id, name: board.name }
+        
+        return new ResponseBoardDto(board.id, board.name)
     }
 
     async findAll(userId: string): Promise<Board[]> {
@@ -47,13 +41,11 @@ export class BoardService {
             throw new NotFoundException(`Cannot find board with id ${id}`)
         }
 
-        // board!!.columns = await this.columnService.findAll(id)
-        
-        return board!!
+        return board
     }
 
-    async update(id: string, updateBoardDto: UpdateBoardDto) {
-        return await this.boardRepository.update(id, { ...updateBoardDto })
+    async update(updateBoardDto: UpdateBoardDto) {
+        return await this.boardRepository.update(updateBoardDto.id, { ...updateBoardDto })
     }
 
     async remove(id: string) {

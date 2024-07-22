@@ -14,13 +14,12 @@ export class CardController {
     return await this.cardService.create(createCardDto)
   }
 
-  @Patch(':id')
+  @Patch()
   async update(
-    @Param('id') id: string,
     @Body() updateCardDto: UpdateCardDto
   ) {
-    await this.cardService.update(id, updateCardDto)
-    return { id, ...updateCardDto }
+    await this.cardService.update(updateCardDto)
+    return { ...updateCardDto }
   }
 
   @Delete(':id')
