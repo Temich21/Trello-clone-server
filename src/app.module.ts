@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config'
 import { AuthModule } from './auth/auth.module';
 import { User } from './auth/entities/user.entity';
 import { TokenModule } from './auth/token/token.module';
 import { BoardModule } from './board/board.module';
-import { Board } from './board/entities/board.entity';
 import { ColumnModule } from './column/column.module';
 import { CardModule } from './card/card.module';
+import { Board } from './board/entities/board.entity';
 import { Column } from './column/entities/column.entity';
 import { Card } from './card/entities/card.entity';
 
@@ -27,7 +28,11 @@ import { Card } from './card/entities/card.entity';
     TokenModule,
     BoardModule,
     ColumnModule,
-    CardModule
+    CardModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
   ],
   controllers: [],
   providers: [],

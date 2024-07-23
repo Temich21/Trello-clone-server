@@ -1,4 +1,5 @@
 import { Injectable, Scope } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { User } from 'src/auth/entities/user.entity';
 
@@ -7,29 +8,29 @@ interface AuthTokens {
     refreshToken: string
 }
 
-//Scope?
 @Injectable()
 export class TokenService {
     constructor(
         private jwtService: JwtService,
+        private configService: ConfigService,
     ) { }
 
     generateTokens(payload: Partial<User>): AuthTokens {
         const accessToken = this.jwtService.sign(payload, {
-            secret: process.env.JWT_ACCESS_SECRET,
-            expiresIn: process.env.JWT_ACCESS_TOKEN_TIME
+            secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+            expiresIn: this.configService.get<string>('JWT_ACCESS_TOKEN_TIME'),
         } as JwtSignOptions)
 
         const refreshToken = this.jwtService.sign(payload, {
-            secret: process.env.JWT_REFRESH_SECRET,
-            expiresIn: process.env.JWT_REFRESH_TOKEN_TIME
+            secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+            expiresIn: this.configService.get<string>('JWT_REFRESH_TOKEN_TIME'),
         } as JwtSignOptions)
 
         return { accessToken, refreshToken }
     }
 
     validateAccessToken(token: string) {
-        return this.jwtService.verify(token, { secret: process.env.JWT_ACCESS_SECRET })
+        return this.jwtService.verify(token, { secret: this.configService.get<string>('JWT_ACCESS_SECRET') })
     }
 
 }

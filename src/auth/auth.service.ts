@@ -19,6 +19,7 @@ interface AuthUser {
     user: UserResponse
 }
 
+//Корректный ли использовал синглтон? Разобрать на созвоне
 @Injectable({ scope: Scope.REQUEST })
 export class AuthService {
     constructor(

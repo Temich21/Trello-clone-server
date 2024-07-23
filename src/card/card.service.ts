@@ -14,23 +14,24 @@ export class CardService {
   ) { }
 
   async create(CreateCardDto: CreateCardDto): Promise<ResponseCardDto> {
+    const { max: maxRank } = await this.cardRepository
+      .createQueryBuilder('card')
+      .select('MAX(card.rank)', 'max')
+      .where('card.column.id = :columnId', { columnId: CreateCardDto.columnId })
+      .getRawOne()
+
+    const newRank = maxRank !== null ? +maxRank + 1 : 1
+
     const newCard = this.cardRepository.create({
       column: { id: CreateCardDto.columnId },
-      name: CreateCardDto.name
+      name: CreateCardDto.name,
+      rank: newRank
     })
 
     const card = await this.cardRepository.save(newCard)
 
     return new ResponseCardDto(card.id, card.name)
   }
-
-  // async findAll(columnId: string): Promise<Card[]> {
-  //   return await this.cardRepository.find({
-  //     where: { column: { id: columnId } },
-  //     // order: { rank: "ASC"},
-  //     relations: ['column'],
-  //   })
-  // }
 
   async update(updateCardDto: UpdateCardDto) {
     return await this.cardRepository.update(updateCardDto.id, { ...updateCardDto })

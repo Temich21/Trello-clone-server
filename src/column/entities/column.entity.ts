@@ -15,4 +15,7 @@ export class Column {
 
     @OneToMany(() => Card, card => card.column)
     cards: Card[]
+
+    @ColumnORM({ type: 'bigint' })
+    rank: number
 }

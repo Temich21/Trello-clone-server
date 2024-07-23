@@ -14,9 +14,18 @@ export class ColumnService {
     ) { }
 
     async create(createColumnDto: CreateColumnDto): Promise<ResponseColumnDto> {
+        const { max: maxRank} = await this.columnRepository
+            .createQueryBuilder('column')
+            .select('MAX(column.rank)', 'max')
+            .where('column.board.id = :boardId', { boardId: createColumnDto.boardId })
+            .getRawOne()
+
+        const newRank = maxRank !== null ? +maxRank + 1 : 1
+
         const newColumn = this.columnRepository.create({
             board: { id: createColumnDto.boardId },
-            name: createColumnDto.name
+            name: createColumnDto.name,
+            rank: newRank
         })
 
         const column = await this.columnRepository.save(newColumn)

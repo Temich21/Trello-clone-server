@@ -8,7 +8,7 @@ import {
 export class ResponseBoardDto extends PartialType(CreateBoardDto) {
     @IsString()
     @IsNotEmpty()
-    id: string;
+    id: string
 
     constructor(id: string, name: string) {
         super()

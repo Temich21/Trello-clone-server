@@ -1,10 +1,14 @@
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private jwtService: JwtService) {
+  constructor(
+    private jwtService: JwtService,
+    private configService: ConfigService
+  ) {
     super()
   }
 
@@ -21,7 +25,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw new UnauthorizedException('Token not found')
     }
 
-    const userData = this.jwtService.verify(token, { secret: process.env.JWT_ACCESS_SECRET })
+    const userData = this.jwtService.verify(token, { secret: this.configService.get<string>('JWT_ACCESS_SECRET') })
     if (!userData) {
       throw new UnauthorizedException('Invalid token')
     }
