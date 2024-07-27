@@ -5,10 +5,12 @@ import {
     IsString,
 } from 'class-validator';
 
-export class ResponseColumnDto extends PartialType(CreateColumnDto) {
+export class ResponseCreateColumnDto extends PartialType(CreateColumnDto) {
     @IsString()
     @IsNotEmpty()
     id: string
+
+    cards = []
 
     constructor(id: string, name: string) {
         super()

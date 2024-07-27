@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { CreateColumnDto } from './dto/create-column.dto';
 import { UpdateColumnDto } from './dto/update-column.dto';
-import { ResponseColumnDto } from './dto/response-column.dto';
+import { ResponseCreateColumnDto } from './dto/response-column.dto';
 import { Column } from './entities/column.entity';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class ColumnService {
         private columnRepository: Repository<Column>,
     ) { }
 
-    async create(createColumnDto: CreateColumnDto): Promise<ResponseColumnDto> {
+    async create(createColumnDto: CreateColumnDto): Promise<ResponseCreateColumnDto> {
         const { max: maxRank} = await this.columnRepository
             .createQueryBuilder('column')
             .select('MAX(column.rank)', 'max')
@@ -30,7 +30,7 @@ export class ColumnService {
 
         const column = await this.columnRepository.save(newColumn)
 
-        return new ResponseColumnDto(column.id, column.name)
+        return new ResponseCreateColumnDto(column.id, column.name)
     }
 
     async update(updateColumnDto: UpdateColumnDto) {

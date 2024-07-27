@@ -13,24 +13,25 @@ export class CardService {
     private cardRepository: Repository<Card>,
   ) { }
 
-  async create(CreateCardDto: CreateCardDto): Promise<ResponseCardDto> {
+  async create(createCardDto: CreateCardDto): Promise<ResponseCardDto> {
+    
     const { max: maxRank } = await this.cardRepository
       .createQueryBuilder('card')
       .select('MAX(card.rank)', 'max')
-      .where('card.column.id = :columnId', { columnId: CreateCardDto.columnId })
+      .where('card.column.id = :columnId', { columnId: createCardDto.columnId })
       .getRawOne()
 
     const newRank = maxRank !== null ? +maxRank + 1 : 1
 
     const newCard = this.cardRepository.create({
-      column: { id: CreateCardDto.columnId },
-      name: CreateCardDto.name,
+      column: { id: createCardDto.columnId },
+      name: createCardDto.name,
       rank: newRank
     })
 
     const card = await this.cardRepository.save(newCard)
 
-    return new ResponseCardDto(card.id, card.name)
+    return new ResponseCardDto(card.id, card.name, createCardDto.columnId) //Добавил columnId для фронта
   }
 
   async update(updateCardDto: UpdateCardDto) {

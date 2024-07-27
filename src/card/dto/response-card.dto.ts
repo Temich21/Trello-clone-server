@@ -10,9 +10,10 @@ export class ResponseCardDto extends PartialType(CreateCardDto) {
     @IsNotEmpty()
     id: string;
 
-    constructor(id: string, name: string) {
+    constructor(id: string, name: string, columnId: string) {
         super()
         this.id = id
         this.name = name
+        this.columnId = columnId
     }
 }

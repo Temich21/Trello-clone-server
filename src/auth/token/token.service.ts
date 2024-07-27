@@ -28,9 +28,4 @@ export class TokenService {
 
         return { accessToken, refreshToken }
     }
-
-    validateAccessToken(token: string) {
-        return this.jwtService.verify(token, { secret: this.configService.get<string>('JWT_ACCESS_SECRET') })
-    }
-
 }

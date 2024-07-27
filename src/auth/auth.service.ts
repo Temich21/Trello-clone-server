@@ -59,16 +59,6 @@ export class AuthService {
     }
 
     async refresh(refreshToken: string) {
-        if (!refreshToken) {
-            //throw error - unauthorized person
-        }
-
-        const userData = this.tokenService.validateAccessToken(refreshToken)
-
-        if (!userData) {
-            //throw error - unauthorized person
-        }
-
         // const userDto = new UserDto()
 
         // const tokens = this.tokenService.generateTokens({ ...userDto })

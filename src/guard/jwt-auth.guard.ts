@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
+export class AccessJwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService
@@ -28,6 +28,32 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const userData = this.jwtService.verify(token, { secret: this.configService.get<string>('JWT_ACCESS_SECRET') })
     if (!userData) {
       throw new UnauthorizedException('Invalid token')
+    }
+
+    return true
+  }
+}
+
+@Injectable()
+export class RefreshJwtAuthGuard extends AuthGuard('jwt') {
+  constructor(
+    private jwtService: JwtService,
+    private configService: ConfigService
+  ) {
+    super()
+  }
+
+  canActivate(context: ExecutionContext) {
+    const request = context.switchToHttp().getRequest()
+
+    const refreshToken = request.cookies['refreshToken']
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token not found')
+    }
+
+    const userData = this.jwtService.verify(refreshToken, { secret: this.configService.get<string>('JWT_REFRESH_SECRET') })
+    if (!userData) {
+      throw new UnauthorizedException('Invalid refresh token')
     }
 
     return true
