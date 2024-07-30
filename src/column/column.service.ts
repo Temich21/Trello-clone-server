@@ -1,9 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { CreateColumnDto } from './dto/create-column.dto';
-import { UpdateColumnDto } from './dto/update-column.dto';
-import { ResponseCreateColumnDto } from './dto/response-column.dto';
+import { ColumnDto } from './dto/column.dto';
 import { Column } from './entities/column.entity';
 
 @Injectable()
@@ -13,28 +11,28 @@ export class ColumnService {
         private columnRepository: Repository<Column>,
     ) { }
 
-    async create(createColumnDto: CreateColumnDto): Promise<ResponseCreateColumnDto> {
-        const { max: maxRank} = await this.columnRepository
+    async create(columnDto: ColumnDto): Promise<ColumnDto> {
+        const { max: maxRank } = await this.columnRepository
             .createQueryBuilder('column')
             .select('MAX(column.rank)', 'max')
-            .where('column.board.id = :boardId', { boardId: createColumnDto.boardId })
+            .where('column.board.id = :boardId', { boardId: columnDto.boardId })
             .getRawOne()
 
         const newRank = maxRank !== null ? +maxRank + 1 : 1
 
         const newColumn = this.columnRepository.create({
-            board: { id: createColumnDto.boardId },
-            name: createColumnDto.name,
+            board: { id: columnDto.boardId },
+            name: columnDto.name,
             rank: newRank
         })
 
         const column = await this.columnRepository.save(newColumn)
 
-        return new ResponseCreateColumnDto(column.id, column.name)
+        return new ColumnDto(column.id, column.name, columnDto.boardId)
     }
 
-    async update(updateColumnDto: UpdateColumnDto) {
-        return await this.columnRepository.update(updateColumnDto.id, { ...updateColumnDto })
+    async update(columnDto: ColumnDto) {
+        await this.columnRepository.update(columnDto.id, { ...columnDto })
     }
 
     async remove(id: string) {

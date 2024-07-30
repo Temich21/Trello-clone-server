@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ColumnService } from './column.service';
-import { CreateColumnDto } from './dto/create-column.dto';
-import { UpdateColumnDto } from './dto/update-column.dto';
+import { ColumnDto } from './dto/column.dto';
 
 @Controller('column')
 export class ColumnController {
@@ -9,17 +8,17 @@ export class ColumnController {
 
   @Post()
   async create(
-    @Body() createColumndDto: CreateColumnDto,
+    @Body() columnDto: ColumnDto,
   ) {
-    return await this.columnService.create(createColumndDto)
+    return await this.columnService.create(columnDto)
   }
 
   @Patch()
   async update(
-    @Body() updateColumnDto: UpdateColumnDto
+    @Body() columnDto: ColumnDto
   ) {
-    await this.columnService.update(updateColumnDto)
-    return { ...updateColumnDto }
+    await this.columnService.update(columnDto)
+    return columnDto
   }
 
   @Delete(':id')

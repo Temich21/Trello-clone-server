@@ -1,17 +1,22 @@
-import { CreateCardDto } from './create-card.dto';
-import { PartialType } from '@nestjs/mapped-types';
 import {
     IsNotEmpty,
     IsString,
 } from 'class-validator';
 
-export class ResponseCardDto extends PartialType(CreateCardDto) {
+export class CardDto {
+    @IsString()
+    id: string
+
     @IsString()
     @IsNotEmpty()
-    id: string;
+    name: string
 
+    @IsString()
+    @IsNotEmpty()
+    columnId: string
+
+    // PR viz
     constructor(id: string, name: string, columnId: string) {
-        super()
         this.id = id
         this.name = name
         this.columnId = columnId

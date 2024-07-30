@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Next, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Next, Res, UseGuards } from '@nestjs/common';
 import { BoardService } from './board.service';
-import { CreateBoardDto } from './dto/create-board.dto';
-import { UpdateBoardDto } from './dto/update-board.dto';
+import { BoardDto } from './dto/board.dto';
 import { NextFunction } from 'express';
 
 @Controller('board')
@@ -10,12 +9,12 @@ export class BoardController {
 
   @Post()
   async create(
-    @Body() createBoardDto: CreateBoardDto,
+    @Body() boardDto: BoardDto,
     @Res({ passthrough: true }) res: Response,
     @Next() next: NextFunction
   ) {
     try {
-      return await this.boardService.create(createBoardDto)
+      return await this.boardService.create(boardDto)
     } catch (e) {
       return next(new HttpException({
         status: HttpStatus.FORBIDDEN,
@@ -54,10 +53,10 @@ export class BoardController {
 
   @Patch()
   async update(
-    @Body() updateBoardDto: UpdateBoardDto
+    @Body() boardDto: BoardDto
   ) {
-    await this.boardService.update(updateBoardDto)
-    return { ...updateBoardDto }
+    await this.boardService.update(boardDto)
+    return boardDto
   }
 
   @Delete(':id')

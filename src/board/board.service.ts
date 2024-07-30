@@ -1,9 +1,7 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { CreateBoardDto } from './dto/create-board.dto';
-import { UpdateBoardDto } from './dto/update-board.dto';
-import { ResponseBoardDto } from './dto/response-board.dto';
+import { BoardDto } from './dto/board.dto';
 import { Board } from './entities/board.entity';
 
 @Injectable()
@@ -13,24 +11,26 @@ export class BoardService {
         private boardRepository: Repository<Board>,
     ) { }
 
-    async create(createBoardDto: CreateBoardDto): Promise<ResponseBoardDto> {
-        const { max: maxRank } = await this.boardRepository
-            .createQueryBuilder('board')
-            .select('MAX(board.rank)', 'max')
-            .where('board.user.id = :userId', { userId: createBoardDto.userId })
-            .getRawOne()
-
-        const newRank = maxRank !== null ? +maxRank + 1 : 1
-
+    async create(boardDto: BoardDto): Promise<BoardDto> {
         const newBoard = this.boardRepository.create({
-            user: { id: createBoardDto.userId },
-            name: createBoardDto.name,
-            rank: newRank
+            user: { id: boardDto.userId },
+            name: boardDto.name,
+            rank: await this.newMaxRank(boardDto.userId)
         })
 
         const board = await this.boardRepository.save(newBoard)
 
-        return new ResponseBoardDto(board.id, board.name)
+        return new BoardDto(board.id, board.name, boardDto.userId)
+    }
+
+    private async newMaxRank(userId: string) {
+        const { max: maxRank } = await this.boardRepository
+            .createQueryBuilder('board')
+            .select('MAX(board.rank)', 'max')
+            .where('board.user.id = :userId', { userId: userId })
+            .getRawOne()
+
+        return maxRank !== null ? +maxRank + 1 : 1
     }
 
     async findAll(userId: string): Promise<Board[]> {
@@ -58,8 +58,8 @@ export class BoardService {
         return board
     }
 
-    async update(updateBoardDto: UpdateBoardDto) {
-        return await this.boardRepository.update(updateBoardDto.id, { ...updateBoardDto })
+    async update(boardDto: BoardDto) {
+        return await this.boardRepository.update(boardDto.id, boardDto)
     }
 
     async remove(id: string) {

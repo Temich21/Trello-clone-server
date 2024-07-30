@@ -1,4 +1,4 @@
-import { Injectable, Scope } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash, compare } from 'bcrypt'
 import { TokenService } from 'src/auth/token/token.service';
@@ -19,8 +19,7 @@ interface AuthUser {
     user: UserResponse
 }
 
-//Корректный ли использовал синглтон? Разобрать на созвоне
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class AuthService {
     constructor(
         private tokenService: TokenService,
@@ -59,10 +58,14 @@ export class AuthService {
     }
 
     async refresh(refreshToken: string) {
-        // const userDto = new UserDto()
+        if (!refreshToken) {
+            throw new BadRequestException('Refresh token not found')
+        }
 
-        // const tokens = this.tokenService.generateTokens({ ...userDto })
-        // await this.tokenService.saveToken(id, tokens.refreshToken)
-        return
+        const user = this.tokenService.validateRefresh(refreshToken)
+        
+        const tokens = this.tokenService.generateTokens({ id: user.id, name: user.name, email: user.email, password: user.password })
+
+        return { ...tokens, user: { id: user.id, name: user.name, email: user.email } }
     }
 }

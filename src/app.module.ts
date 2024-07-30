@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 import { AuthModule } from './auth/auth.module';
 import { User } from './auth/entities/user.entity';
 import { TokenModule } from './auth/token/token.module';
@@ -10,6 +11,8 @@ import { CardModule } from './card/card.module';
 import { Board } from './board/entities/board.entity';
 import { Column } from './column/entities/column.entity';
 import { Card } from './card/entities/card.entity';
+import { AccessJwtAuthGuard } from './guard/jwt-auth.guard';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -35,6 +38,13 @@ import { Card } from './card/entities/card.entity';
     }),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: AccessJwtAuthGuard,
+    // },
+    // JwtService,
+    // ConfigService,
+  ],
 })
 export class AppModule { }
