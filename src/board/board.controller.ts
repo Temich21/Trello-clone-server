@@ -13,16 +13,7 @@ export class BoardController {
     @Res({ passthrough: true }) res: Response,
     @Next() next: NextFunction
   ) {
-    try {
-      return await this.boardService.create(boardDto)
-    } catch (e) {
-      return next(new HttpException({
-        status: HttpStatus.FORBIDDEN,
-        error: 'Error during Creating Board',
-      }, HttpStatus.FORBIDDEN, {
-        cause: e
-      }))
-    }
+    return await this.boardService.create(boardDto)
   }
 
   @Get('all/:userId')
@@ -31,17 +22,8 @@ export class BoardController {
     @Res({ passthrough: true }) res: Response,
     @Next() next: NextFunction
   ) {
-    try {
-      const boards = await this.boardService.findAll(userId)
-      return boards
-    } catch (e) {
-      return next(new HttpException({
-        status: HttpStatus.FORBIDDEN,
-        error: 'Error during Getting All Boards',
-      }, HttpStatus.FORBIDDEN, {
-        cause: e
-      }))
-    }
+    const boards = await this.boardService.findAll(userId)
+    return boards
   }
 
   @Get(':id')
@@ -59,11 +41,19 @@ export class BoardController {
     return boardDto
   }
 
-  @Delete(':id')
-  async remove(
-    @Param('id') id: string,
+  @Patch('rank')
+  async changeRank(
+    @Body() boardDto: BoardDto
   ) {
-    await this.boardService.remove(id)
-    return id
+    await this.boardService.changeRank(boardDto)
+    return boardDto
+  }
+
+  @Delete()
+  async remove(
+    @Body() boardDto: BoardDto
+  ) {
+    await this.boardService.remove(boardDto)
+    return boardDto
   }
 }

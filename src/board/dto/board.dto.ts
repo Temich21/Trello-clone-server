@@ -15,6 +15,9 @@ export class BoardDto {
     @IsNotEmpty()
     userId: string
 
+    @IsString()
+    rank: number
+
     // PR viz
     constructor(id: string, name: string, userId: string) {
         this.id = id

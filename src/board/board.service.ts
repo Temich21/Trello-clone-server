@@ -45,7 +45,7 @@ export class BoardService {
 
     //     return maxRank !== null ? +maxRank + 1 : 1;
     // }
-    // Нужен ли транзакция для create
+    // Нужна ли транзакция для create
     async create(boardDto: BoardDto): Promise<BoardDto> {
         const newBoard = this.boardRepository.create({
             user: { id: boardDto.userId },
@@ -113,16 +113,69 @@ export class BoardService {
         }
     }
 
-    async remove(id: string) {
+    async changeRank(boardDto: BoardDto): Promise<void> {
         const queryRunner = this.dataSource.createQueryRunner()
         await queryRunner.connect()
         await queryRunner.startTransaction()
 
         try {
-            const deleteResult = await queryRunner.manager.delete(Board, id)
-            if (deleteResult.affected === 0) {
-                throw new NotFoundException(`Cannot find board with id ${id}`)
+            const board = await queryRunner.manager.findOne(Board, { where: { id: boardDto.id } })
+            if (!board) {
+                throw new NotFoundException(`Cannot find board with id ${boardDto.id}`)
             }
+
+            const currentRank = board.rank
+            const newRank = boardDto.rank
+
+            if (currentRank === newRank) {
+                return
+            }
+
+            if (currentRank < newRank) {
+                await queryRunner.manager
+                    .createQueryBuilder()
+                    .update(Board)
+                    .set({ rank: () => "rank - 1" })
+                    .where("user.id = :userId", { userId: boardDto.userId })
+                    .andWhere("rank > :currentRank AND rank <= :newRank", { currentRank, newRank })
+                    .execute()
+            } else {
+                await queryRunner.manager
+                    .createQueryBuilder()
+                    .update(Board)
+                    .set({ rank: () => "rank + 1" })
+                    .where("user.id = :userId", { userId: boardDto.userId })
+                    .andWhere("rank < :currentRank AND rank >= :newRank", { currentRank, newRank })
+                    .execute()
+            }
+
+            board.rank = newRank
+            await queryRunner.manager.save(Board, board)
+            await queryRunner.commitTransaction()
+        } catch (err) {
+            await queryRunner.rollbackTransaction()
+            throw new BadRequestException(err)
+        } finally {
+            await queryRunner.release()
+        }
+    }
+
+    async remove(boardDto: BoardDto) {
+        const queryRunner = this.dataSource.createQueryRunner()
+        await queryRunner.connect()
+        await queryRunner.startTransaction()
+
+        try {
+            await queryRunner.manager.delete(Board, boardDto.id)
+
+            // ???
+            // await queryRunner.manager
+            //         .createQueryBuilder()
+            //         .update(Board)
+            //         .set({ rank: () => "rank - 1" })
+            //         .where("user.id = :userId", { userId: boardDto.userId })
+            //         .andWhere("rank > :deletedRank", { deletedRank: boardDto.rank })
+            //         .execute()
 
             await queryRunner.commitTransaction()
         } catch (err) {
