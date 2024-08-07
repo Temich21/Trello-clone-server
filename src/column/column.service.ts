@@ -1,57 +1,75 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { CreateColumnDto } from './dto/create-column.dto';
-import { UpdateColumnDto } from './dto/update-column.dto';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { ColumnDto } from './dto/column.dto';
 import { Column } from './entities/column.entity';
-import { Card } from 'src/card/entities/card.entity';
-import { CardService } from 'src/card/card.service'
-
-export interface ColumnResponse {
-    id: string,
-    name: string,
-    cards?: Card[]
-}
 
 @Injectable()
 export class ColumnService {
     constructor(
         @InjectRepository(Column)
         private columnRepository: Repository<Column>,
-        private cardService: CardService,
+        private dataSource: DataSource
     ) { }
 
-    async create(createColumnDto: CreateColumnDto): Promise<ColumnResponse> {
+    //Transaction?
+    async create(columnDto: ColumnDto): Promise<ColumnDto> {
+        const { max: maxRank } = await this.columnRepository
+            .createQueryBuilder('column')
+            .select('MAX(column.rank)', 'max')
+            .where('column.board.id = :boardId', { boardId: columnDto.boardId })
+            .getRawOne()
+
+        const newRank = maxRank !== null ? +maxRank + 1 : 1
+
         const newColumn = this.columnRepository.create({
-            board: { id: createColumnDto.boardId },
-            name: CreateColumnDto.name
+            board: { id: columnDto.boardId },
+            name: columnDto.name,
+            rank: newRank
         })
-        // Add response dto
+
         const column = await this.columnRepository.save(newColumn)
-        return { id: column.id, name: column.name }
+
+        return new ColumnDto(column.id, column.name, columnDto.boardId)
     }
 
-    async findAll(boardId: string): Promise<Column[]> {
-        const columns = await this.columnRepository.find({
-            where: { board: { id: boardId } },
-            relations: ['board'],
-        })
+    async update(columnDto: ColumnDto) {
+        const queryRunner = this.dataSource.createQueryRunner()
+        await queryRunner.connect()
+        await queryRunner.startTransaction()
 
-        const columnsWithCards = await Promise.all(
-            columns.map(async (column) => {
-                const cards = await this.cardService.findAll(column.id)
-                return { ...column, cards }
-            })
-        )
+        try {
+            const updateResult = await queryRunner.manager.update(Column, columnDto.id, columnDto)
+            if (updateResult.affected === 0) {
+                throw new NotFoundException(`Cannot find column with id ${columnDto.id}`)
+            }
 
-        return columnsWithCards
-    }
-
-    async update(updateColumnDto: UpdateColumnDto) {
-        return await this.columnRepository.update(updateColumnDto.id, { ...updateColumnDto })
+            await queryRunner.commitTransaction()
+        } catch (err) {
+            await queryRunner.rollbackTransaction()
+            throw new BadRequestException(err)
+        } finally {
+            await queryRunner.release()
+        }
     }
 
     async remove(id: string) {
-        return await this.columnRepository.delete({ id })
+        const queryRunner = this.dataSource.createQueryRunner()
+        await queryRunner.connect()
+        await queryRunner.startTransaction()
+
+        try {
+            const deleteResult = await queryRunner.manager.delete(Column, id)
+            if (deleteResult.affected === 0) {
+                throw new NotFoundException(`Cannot find column with id ${id}`)
+            }
+
+            await queryRunner.commitTransaction()
+        } catch (err) {
+            await queryRunner.rollbackTransaction()
+            throw new BadRequestException(err)
+        } finally {
+            await queryRunner.release()
+        }
     }
 }

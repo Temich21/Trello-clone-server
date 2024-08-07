@@ -1,4 +1,4 @@
-import { Injectable, Scope } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash, compare } from 'bcrypt'
 import { TokenService } from 'src/auth/token/token.service';
@@ -19,7 +19,7 @@ interface AuthUser {
     user: UserResponse
 }
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class AuthService {
     constructor(
         private tokenService: TokenService,
@@ -59,19 +59,13 @@ export class AuthService {
 
     async refresh(refreshToken: string) {
         if (!refreshToken) {
-            //throw error - unauthorized person
+            throw new BadRequestException('Refresh token not found')
         }
 
-        const userData = this.tokenService.validateAccessToken(refreshToken)
+        const user = this.tokenService.validateRefresh(refreshToken)
+        
+        const tokens = this.tokenService.generateTokens({ id: user.id, name: user.name, email: user.email, password: user.password })
 
-        if (!userData) {
-            //throw error - unauthorized person
-        }
-
-        // const userDto = new UserDto()
-
-        // const tokens = this.tokenService.generateTokens({ ...userDto })
-        // await this.tokenService.saveToken(id, tokens.refreshToken)
-        return
+        return { ...tokens, user: { id: user.id, name: user.name, email: user.email } }
     }
 }

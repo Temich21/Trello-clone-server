@@ -1,16 +1,17 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Next, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Next, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request, Response, NextFunction } from 'express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CredentialsDto } from './dto/credentials.dto';
+import { Public } from '../decorators/public.decorator';
 
 @Controller('auth')
+@Public()
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('singup')
     async singup(
-        @Req() req: Request,
         @Body() createUserDto: CreateUserDto,
         @Res({ passthrough: true }) res: Response,
         @Next() next: NextFunction
@@ -31,7 +32,6 @@ export class AuthController {
 
     @Post('login')
     async login(
-        @Req() req: Request,
         @Body() loginUserDto: CredentialsDto,
         @Res({ passthrough: true }) res: Response,
         @Next() next: NextFunction
@@ -52,7 +52,6 @@ export class AuthController {
 
     @Get('logout')
     async logout(
-        @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
         @Next() next: NextFunction
     ) {
@@ -77,7 +76,7 @@ export class AuthController {
         try {
             const { refreshToken } = req.cookies
             const userData = await this.authService.refresh(refreshToken)
-            // res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
+            res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
             return res.json(userData)
         } catch (e) {
             return next(new HttpException({
