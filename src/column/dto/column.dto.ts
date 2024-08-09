@@ -15,6 +15,9 @@ export class ColumnDto {
     @IsNotEmpty()
     boardId: string
 
+    @IsString()
+    rank: number
+
     // PR viz
     constructor(id: string, name: string, boardId: string) {
         this.id = id

@@ -1,75 +1,92 @@
-import { InjectRepository } from '@nestjs/typeorm';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource, EntityManager } from 'typeorm';
 import { ColumnDto } from './dto/column.dto';
 import { Column } from './entities/column.entity';
 
 @Injectable()
 export class ColumnService {
     constructor(
-        @InjectRepository(Column)
-        private columnRepository: Repository<Column>,
         private dataSource: DataSource
     ) { }
 
-    //Transaction?
     async create(columnDto: ColumnDto): Promise<ColumnDto> {
-        const { max: maxRank } = await this.columnRepository
-            .createQueryBuilder('column')
+        return await this.dataSource.transaction(async (manager: EntityManager) => {
+            const newColumn = manager.create(Column, {
+                board: { id: columnDto.boardId },
+                name: columnDto.name,
+                rank: await this.newMaxRank(columnDto.boardId, manager)
+            });
+
+            const column = await manager.save(newColumn)
+
+            return new ColumnDto(column.id, column.name, column.board.id)
+        })
+    }
+
+    private async newMaxRank(boardId: string, manager: EntityManager) {
+        const { max: maxRank } = await manager
+            .createQueryBuilder(Column, 'column')
             .select('MAX(column.rank)', 'max')
-            .where('column.board.id = :boardId', { boardId: columnDto.boardId })
+            .where('column.board.id = :boardId', { boardId })
             .getRawOne()
 
-        const newRank = maxRank !== null ? +maxRank + 1 : 1
-
-        const newColumn = this.columnRepository.create({
-            board: { id: columnDto.boardId },
-            name: columnDto.name,
-            rank: newRank
-        })
-
-        const column = await this.columnRepository.save(newColumn)
-
-        return new ColumnDto(column.id, column.name, columnDto.boardId)
+        return maxRank !== null ? +maxRank + 1 : 1
     }
 
     async update(columnDto: ColumnDto) {
-        const queryRunner = this.dataSource.createQueryRunner()
-        await queryRunner.connect()
-        await queryRunner.startTransaction()
-
-        try {
-            const updateResult = await queryRunner.manager.update(Column, columnDto.id, columnDto)
+        return await this.dataSource.transaction(async (manager: EntityManager) => {
+            const updateResult = await manager.update(Column, columnDto.id, columnDto);
             if (updateResult.affected === 0) {
+                throw new NotFoundException(`Cannot find board with id ${columnDto.id}`)
+            }
+        })
+    }
+
+    async changeRank(columnDto: ColumnDto): Promise<void> {
+        return await this.dataSource.transaction(async (manager: EntityManager) => {
+            const column = await manager.findOne(Column, { where: { id: columnDto.id } })
+            if (!column) {
                 throw new NotFoundException(`Cannot find column with id ${columnDto.id}`)
             }
 
-            await queryRunner.commitTransaction()
-        } catch (err) {
-            await queryRunner.rollbackTransaction()
-            throw new BadRequestException(err)
-        } finally {
-            await queryRunner.release()
-        }
+            const currentRank = column.rank
+            const newRank = columnDto.rank
+
+            console.log('columnDto.boardId', columnDto.boardId);
+
+            if (currentRank === newRank) {
+                return
+            }
+
+            if (currentRank < newRank) {
+                await manager
+                    .createQueryBuilder()
+                    .update(Column)
+                    .set({ rank: () => "rank - 1" })
+                    .where("board.id = :boardId", { boardId: columnDto.boardId })
+                    .andWhere("rank > :currentRank AND rank <= :newRank", { currentRank, newRank })
+                    .execute()
+            } else {
+                await manager
+                    .createQueryBuilder()
+                    .update(Column)
+                    .set({ rank: () => "rank + 1" })
+                    .where("board.id = :boardId", { boardId: columnDto.boardId })
+                    .andWhere("rank < :currentRank AND rank >= :newRank", { currentRank, newRank })
+                    .execute()
+            }
+
+            column.rank = newRank
+            await manager.save(Column, column)
+        })
     }
 
     async remove(id: string) {
-        const queryRunner = this.dataSource.createQueryRunner()
-        await queryRunner.connect()
-        await queryRunner.startTransaction()
-
-        try {
-            const deleteResult = await queryRunner.manager.delete(Column, id)
+        return await this.dataSource.transaction(async (manager: EntityManager) => {
+            const deleteResult = await manager.delete(Column, id)
             if (deleteResult.affected === 0) {
                 throw new NotFoundException(`Cannot find column with id ${id}`)
             }
-
-            await queryRunner.commitTransaction()
-        } catch (err) {
-            await queryRunner.rollbackTransaction()
-            throw new BadRequestException(err)
-        } finally {
-            await queryRunner.release()
-        }
+        })
     }
 }

@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Repository, DataSource, QueryRunner } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Repository, DataSource, EntityManager } from 'typeorm';
 import { BoardDto } from './dto/board.dto';
 import { Board } from './entities/board.entity';
 
@@ -12,40 +12,6 @@ export class BoardService {
         private dataSource: DataSource
     ) { }
 
-    // async create(boardDto: BoardDto): Promise<BoardDto> {
-    //     const queryRunner = this.dataSource.createQueryRunner()
-    //     await queryRunner.connect()
-    //     await queryRunner.startTransaction()
-
-    //     try {
-    //         const newBoard = this.boardRepository.create({
-    //             user: { id: boardDto.userId },
-    //             name: boardDto.name,
-    //             rank: await this.newMaxRank(boardDto.userId, queryRunner)
-    //         })
-
-    //         const board = await queryRunner.manager.save(newBoard)
-
-    //         await queryRunner.commitTransaction()
-    //         return new BoardDto(board.id, board.name, boardDto.userId)
-    //     } catch (err) {
-    //         await queryRunner.rollbackTransaction()
-    //         throw err
-    //     } finally {
-    //         await queryRunner.release()
-    //     }
-    // }
-
-    // private async newMaxRank(userId: string, queryRunner: QueryRunner): Promise<number> {
-    //     const { max: maxRank } = await queryRunner.manager
-    //         .createQueryBuilder(Board, 'board')
-    //         .select('MAX(board.rank)', 'max')
-    //         .where('board.user.id = :userId', { userId: userId })
-    //         .getRawOne();
-
-    //     return maxRank !== null ? +maxRank + 1 : 1;
-    // }
-    // Нужна ли транзакция для create
     async create(boardDto: BoardDto): Promise<BoardDto> {
         const newBoard = this.boardRepository.create({
             user: { id: boardDto.userId },
@@ -94,32 +60,17 @@ export class BoardService {
     }
 
     async update(boardDto: BoardDto): Promise<void> {
-        const queryRunner = this.dataSource.createQueryRunner()
-        await queryRunner.connect()
-        await queryRunner.startTransaction()
-
-        try {
-            const updateResult = await queryRunner.manager.update(Board, boardDto.id, boardDto)
+        return await this.dataSource.transaction(async (manager: EntityManager) => {
+            const updateResult = await manager.update(Board, boardDto.id, boardDto);
             if (updateResult.affected === 0) {
                 throw new NotFoundException(`Cannot find board with id ${boardDto.id}`)
             }
-
-            await queryRunner.commitTransaction()
-        } catch (err) {
-            await queryRunner.rollbackTransaction()
-            throw new BadRequestException(err)
-        } finally {
-            await queryRunner.release()
-        }
+        })
     }
 
     async changeRank(boardDto: BoardDto): Promise<void> {
-        const queryRunner = this.dataSource.createQueryRunner()
-        await queryRunner.connect()
-        await queryRunner.startTransaction()
-
-        try {
-            const board = await queryRunner.manager.findOne(Board, { where: { id: boardDto.id } })
+        return await this.dataSource.transaction(async (manager: EntityManager) => {
+            const board = await manager.findOne(Board, { where: { id: boardDto.id } })
             if (!board) {
                 throw new NotFoundException(`Cannot find board with id ${boardDto.id}`)
             }
@@ -128,11 +79,11 @@ export class BoardService {
             const newRank = boardDto.rank
 
             if (currentRank === newRank) {
-                return
+                return;
             }
 
             if (currentRank < newRank) {
-                await queryRunner.manager
+                await manager
                     .createQueryBuilder()
                     .update(Board)
                     .set({ rank: () => "rank - 1" })
@@ -140,7 +91,7 @@ export class BoardService {
                     .andWhere("rank > :currentRank AND rank <= :newRank", { currentRank, newRank })
                     .execute()
             } else {
-                await queryRunner.manager
+                await manager
                     .createQueryBuilder()
                     .update(Board)
                     .set({ rank: () => "rank + 1" })
@@ -150,39 +101,16 @@ export class BoardService {
             }
 
             board.rank = newRank
-            await queryRunner.manager.save(Board, board)
-            await queryRunner.commitTransaction()
-        } catch (err) {
-            await queryRunner.rollbackTransaction()
-            throw new BadRequestException(err)
-        } finally {
-            await queryRunner.release()
-        }
+            await manager.save(Board, board)
+        })
     }
 
-    async remove(boardDto: BoardDto) {
-        const queryRunner = this.dataSource.createQueryRunner()
-        await queryRunner.connect()
-        await queryRunner.startTransaction()
-
-        try {
-            await queryRunner.manager.delete(Board, boardDto.id)
-
-            // ???
-            // await queryRunner.manager
-            //         .createQueryBuilder()
-            //         .update(Board)
-            //         .set({ rank: () => "rank - 1" })
-            //         .where("user.id = :userId", { userId: boardDto.userId })
-            //         .andWhere("rank > :deletedRank", { deletedRank: boardDto.rank })
-            //         .execute()
-
-            await queryRunner.commitTransaction()
-        } catch (err) {
-            await queryRunner.rollbackTransaction()
-            throw new BadRequestException(err)
-        } finally {
-            await queryRunner.release()
-        }
+    async remove(id: string) {
+        return await this.dataSource.transaction(async (manager: EntityManager) => {
+            const deleteResult = await manager.delete(Board, id);
+            if (deleteResult.affected === 0) {
+                throw new NotFoundException(`Cannot find board with id ${id}`)
+            }
+        })
     }
 }

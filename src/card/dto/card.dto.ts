@@ -15,6 +15,9 @@ export class CardDto {
     @IsNotEmpty()
     columnId: string
 
+    @IsString()
+    rank: number
+
     // PR viz
     constructor(id: string, name: string, columnId: string) {
         this.id = id

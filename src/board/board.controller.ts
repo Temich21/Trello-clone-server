@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Next, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Next, Res } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { BoardDto } from './dto/board.dto';
 import { NextFunction } from 'express';
@@ -49,11 +49,11 @@ export class BoardController {
     return boardDto
   }
 
-  @Delete()
+  @Delete(':id')
   async remove(
-    @Body() boardDto: BoardDto
+    @Param('id') id: string,
   ) {
-    await this.boardService.remove(boardDto)
-    return boardDto
+    await this.boardService.remove(id)
+    return id
   }
 }

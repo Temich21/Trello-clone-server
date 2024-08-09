@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Next, Res } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { CardService } from './card.service';
 import { CardDto } from './dto/card.dto';
 
@@ -18,6 +18,14 @@ export class CardController {
     @Body() cardDto: CardDto
   ) {
     await this.cardService.update(cardDto)
+    return cardDto
+  }
+
+  @Patch('rank')
+  async changeRank(
+    @Body() cardDto: CardDto
+  ) {
+    await this.cardService.changeRank(cardDto)
     return cardDto
   }
 

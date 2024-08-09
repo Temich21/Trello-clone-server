@@ -21,6 +21,14 @@ export class ColumnController {
     return columnDto
   }
 
+  @Patch('rank')
+  async changeRank(
+    @Body() columnDto: ColumnDto
+  ) {
+    await this.columnService.changeRank(columnDto)
+    return columnDto
+  }
+
   @Delete(':id')
   async remove(
     @Param('id') id: string,
