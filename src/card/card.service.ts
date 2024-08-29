@@ -1,89 +1,25 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, EntityManager } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { CardRepository } from './card.repository';
 import { CardDto } from './dto/card.dto';
-import { Card } from './entities/card.entity';
 
 @Injectable()
 export class CardService {
-  constructor(
-    private dataSource: DataSource
-  ) { }
+  constructor(private readonly cardRepository: CardRepository) {}
 
   async create(cardDto: CardDto): Promise<CardDto> {
-    return await this.dataSource.transaction(async (manager: EntityManager) => {
-      const newCard = manager.create(Card, {
-        column: { id: cardDto.columnId },
-        name: cardDto.name,
-        rank: await this.newMaxRank(cardDto.columnId, manager)
-      });
-
-      const card = await manager.save(newCard)
-      return new CardDto(card.id, card.name, card.column.id)
-    })
+    const card = await this.cardRepository.create(cardDto)
+    return new CardDto(card.id, card.name, card.column.id)
   }
 
-  private async newMaxRank(CardId: string, manager: EntityManager) {
-    const { max: maxRank } = await manager
-      .createQueryBuilder(Card, 'card')
-      .select('MAX(card.rank)', 'max')
-      .where('card.column.id = :CardId', { CardId })
-      .getRawOne()
-
-    return maxRank !== null ? +maxRank + 1 : 1
-  }
-
-  async update(cardDto: CardDto) {
-    return await this.dataSource.transaction(async (manager: EntityManager) => {
-      const updateResult = await manager.update(Card, cardDto.id, cardDto)
-      if (updateResult.affected === 0) {
-        throw new NotFoundException(`Cannot find card with id ${cardDto.id}`)
-      }
-    })
+  async update(cardDto: CardDto): Promise<void> {
+    await this.cardRepository.update(cardDto)
   }
 
   async changeRank(cardDto: CardDto): Promise<void> {
-    return await this.dataSource.transaction(async (manager: EntityManager) => {
-      const card = await manager.findOne(Card, { where: { id: cardDto.id } })
-      if (!card) {
-        throw new NotFoundException(`Cannot find card with id ${cardDto.id}`)
-      }
-
-      const currentRank = card.rank
-      const newRank = cardDto.rank
-
-      if (currentRank === newRank) {
-        return
-      }
-
-      if (currentRank < newRank) {
-        await manager
-          .createQueryBuilder()
-          .update(Card)
-          .set({ rank: () => "rank - 1" })
-          .where("column.id = :columnId", { columnId: cardDto.columnId })
-          .andWhere("rank > :currentRank AND rank <= :newRank", { currentRank, newRank })
-          .execute()
-      } else {
-        await manager
-          .createQueryBuilder()
-          .update(Card)
-          .set({ rank: () => "rank + 1" })
-          .where("column.id = :columnId", { columnId: cardDto.columnId })
-          .andWhere("rank < :currentRank AND rank >= :newRank", { currentRank, newRank })
-          .execute()
-      }
-
-      card.rank = newRank
-      await manager.save(Card, card)
-    })
+    await this.cardRepository.changeRank(cardDto)
   }
 
-  async remove(id: string) {
-    return await this.dataSource.transaction(async (manager: EntityManager) => {
-      const deleteResult = await manager.delete(Card, id)
-      if (deleteResult.affected === 0) {
-        throw new NotFoundException(`Cannot find card with id ${id}`)
-      }
-    })
+  async remove(id: string): Promise<void> {
+    await this.cardRepository.remove(id)
   }
 }
