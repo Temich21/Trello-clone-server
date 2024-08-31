@@ -1,5 +1,5 @@
 import { Column as ColumnORM, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { Column } from 'src/column/entities/column.entity';
+import { Column } from '../../column/entities/column.entity';
 
 @Entity()
 export class Card {

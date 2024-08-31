@@ -1,6 +1,6 @@
 import { Column as ColumnORM, Entity, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Board } from 'src/board/entities/board.entity';
-import { Card } from 'src/card/entities/card.entity';
+import { Board } from '../../board/entities/board.entity';
+import { Card } from '../../card/entities/card.entity';
 
 @Entity()
 export class Column {
