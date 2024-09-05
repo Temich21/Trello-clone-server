@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Next, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Next, Res } from '@nestjs/common';
 import { BoardService } from './board.service';
-import { CreateBoardDto } from './dto/create-board.dto';
-import { UpdateBoardDto } from './dto/update-board.dto';
+import { BoardDto } from './dto/board.dto';
 import { NextFunction } from 'express';
 
 @Controller('board')
@@ -10,20 +9,11 @@ export class BoardController {
 
   @Post()
   async create(
-    @Body() createBoardDto: CreateBoardDto,
+    @Body() boardDto: BoardDto,
     @Res({ passthrough: true }) res: Response,
     @Next() next: NextFunction
   ) {
-    try {
-      return await this.boardService.create(createBoardDto)
-    } catch (e) {
-      return next(new HttpException({
-        status: HttpStatus.FORBIDDEN,
-        error: 'Error during Creating Board',
-      }, HttpStatus.FORBIDDEN, {
-        cause: e
-      }))
-    }
+    return await this.boardService.create(boardDto)
   }
 
   @Get('all/:userId')
@@ -32,34 +22,31 @@ export class BoardController {
     @Res({ passthrough: true }) res: Response,
     @Next() next: NextFunction
   ) {
-    try {
-      const boards = await this.boardService.findAll(userId)
-      return boards
-    } catch (e) {
-      return next(new HttpException({
-        status: HttpStatus.FORBIDDEN,
-        error: 'Error during Getting All Boards',
-      }, HttpStatus.FORBIDDEN, {
-        cause: e
-      }))
-    }
+    const boards = await this.boardService.findAll(userId)
+    return boards
   }
 
   @Get(':id')
   async findOne(
     @Param('id') id: string,
   ) {
-    const board = await this.boardService.findOne(id)
-    return board
+    return await this.boardService.findOne(id)
   }
 
-  @Patch(':id')
+  @Patch()
   async update(
-    @Param('id') id: string,
-    @Body() updateBoardDto: UpdateBoardDto
+    @Body() boardDto: BoardDto
   ) {
-    await this.boardService.update(id, updateBoardDto)
-    return { id, ...updateBoardDto }
+    await this.boardService.update(boardDto)
+    return boardDto
+  }
+
+  @Patch('rank')
+  async changeRank(
+    @Body() boardDto: BoardDto
+  ) {
+    await this.boardService.changeRank(boardDto)
+    return boardDto
   }
 
   @Delete(':id')

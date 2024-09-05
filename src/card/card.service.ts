@@ -1,44 +1,25 @@
-import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { CreateCardDto } from './dto/create-card.dto';
-import { UpdateCardDto } from './dto/update-card.dto';
-import { Card } from './entities/card.entity';
-
-export interface CardResponse {
-  id: string,
-  name: string
-}
+import { CardRepository } from './card.repository';
+import { CardDto } from './dto/card.dto';
 
 @Injectable()
 export class CardService {
-  constructor(
-    @InjectRepository(Card)
-    private cardRepository: Repository<Card>,
-  ) { }
+  constructor(private readonly cardRepository: CardRepository) {}
 
-  async create(CreateCardDto: CreateCardDto): Promise<CardResponse> {
-    const newCard = this.cardRepository.create({
-      column: { id: CreateCardDto.columnId },
-      name: CreateCardDto.name
-    })
-    const card = await this.cardRepository.save(newCard)
-    return { id: card.id, name: card.name }
+  async create(cardDto: CardDto): Promise<CardDto> {
+    const card = await this.cardRepository.create(cardDto)
+    return new CardDto(card.id, card.name, card.column.id)
   }
 
-  async findAll(columnId: string): Promise<Card[]> {
-    return await this.cardRepository.find({
-      where: { column: { id: columnId } },
-      // order: { rank: "ASC"},
-      relations: ['column'],
-    })
+  async update(cardDto: CardDto): Promise<void> {
+    await this.cardRepository.update(cardDto)
   }
 
-  async update(id: string, updateCardDto: UpdateCardDto) {
-    return await this.cardRepository.update(id, { ...updateCardDto })
+  async changeRank(cardDto: CardDto): Promise<void> {
+    await this.cardRepository.changeRank(cardDto)
   }
 
-  async remove(id: string) {
-    return await this.cardRepository.delete({ id })
+  async remove(id: string): Promise<void> {
+    await this.cardRepository.remove(id)
   }
 }

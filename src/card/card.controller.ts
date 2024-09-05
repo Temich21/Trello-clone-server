@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, Next, Res } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { CardService } from './card.service';
-import { CreateCardDto } from './dto/create-card.dto';
-import { UpdateCardDto } from './dto/update-card.dto';
+import { CardDto } from './dto/card.dto';
 
 @Controller('card')
 export class CardController {
@@ -9,18 +8,25 @@ export class CardController {
 
   @Post()
   async create(
-    @Body() createCardDto: CreateCardDto,
+    @Body() cardDto: CardDto,
   ) {
-    return await this.cardService.create(createCardDto)
+    return await this.cardService.create(cardDto)
   }
 
-  @Patch(':id')
+  @Patch()
   async update(
-    @Param('id') id: string,
-    @Body() updateCardDto: UpdateCardDto
+    @Body() cardDto: CardDto
   ) {
-    await this.cardService.update(id, updateCardDto)
-    return { id, ...updateCardDto }
+    await this.cardService.update(cardDto)
+    return cardDto
+  }
+
+  @Patch('rank')
+  async changeRank(
+    @Body() cardDto: CardDto
+  ) {
+    await this.cardService.changeRank(cardDto)
+    return cardDto
   }
 
   @Delete(':id')

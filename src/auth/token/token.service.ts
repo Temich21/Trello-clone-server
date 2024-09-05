@@ -1,4 +1,5 @@
-import { Injectable, Scope } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { User } from 'src/auth/entities/user.entity';
 
@@ -7,30 +8,51 @@ interface AuthTokens {
     refreshToken: string
 }
 
-//Scope?
 @Injectable()
 export class TokenService {
     constructor(
-        private accessSecret = process.env.JWT_ACCESS_SECRET,
         private jwtService: JwtService,
+        private configService: ConfigService,
     ) { }
 
     generateTokens(payload: Partial<User>): AuthTokens {
         const accessToken = this.jwtService.sign(payload, {
-            secret: this.accessSecret,
-            expiresIn: process.env.JWT_ACCESS_TOKEN_TIME
+            secret: this.getAccessSecret(),
+            expiresIn: this.getAccessTokenTime(),
         } as JwtSignOptions)
 
         const refreshToken = this.jwtService.sign(payload, {
-            secret: process.env.JWT_REFRESH_SECRET,
-            expiresIn: process.env.JWT_REFRESH_TOKEN_TIME
+            secret: this.getRefreshSecret(),
+            expiresIn: this.getRefreshTokenTime(),
         } as JwtSignOptions)
 
         return { accessToken, refreshToken }
     }
 
-    validateAccessToken(token: string) {
-        return this.jwtService.verify(token, { secret: process.env.JWT_ACCESS_SECRET })
+    validateRefresh(refreshToken: string): User {
+        const user = this.jwtService.verify(refreshToken, { secret: this.configService.get<string>('JWT_REFRESH_SECRET') })
+
+        if (!user) {
+            throw new BadRequestException('Invalid refresh token')
+        }
+
+        return user
+    }
+
+    private getAccessSecret() {
+        return this.configService.get<string>('JWT_ACCESS_SECRET')
+    }
+
+    private getAccessTokenTime() {
+        return this.configService.get<string>('JWT_ACCESS_TOKEN_TIME')
+    }
+
+    private getRefreshSecret() {
+        return this.configService.get<string>('JWT_REFRESH_SECRET')
+    }
+
+    private getRefreshTokenTime() {
+        return this.configService.get<string>('JWT_REFRESH_TOKEN_TIME')
     }
 
 }

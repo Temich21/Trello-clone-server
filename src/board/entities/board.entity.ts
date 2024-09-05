@@ -1,6 +1,6 @@
 import { Column as ColumnORM, Entity, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
-import { User } from 'src/auth/entities/user.entity';
-import { Column } from 'src/column/entities/column.entity';
+import { User } from '../../auth/entities/user.entity';
+import { Column } from '../../column/entities/column.entity';
 
 @Entity()
 export class Board {
@@ -15,4 +15,7 @@ export class Board {
 
     @OneToMany(() => Column, column => column.board)
     columns: Column[]
+
+    @ColumnORM({ type: 'bigint' })
+    rank: number
 }
